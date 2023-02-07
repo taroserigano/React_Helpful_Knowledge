@@ -6,6 +6,8 @@ jwt.sign(payload, secret, options(expires))  --> return jwt.sign({userId: this._
 
 CREATION (Mongo): 
 
+// this will generate token and return like: const token = user.createJWT() 
+
 UserSchema.methods.createJWT = function(){
   return jwt.sign({ userId: this._id}, process.env.JWT_SECRET, {expiresIn: process.env.JWT_LIFETIME }) 
 } 
@@ -35,7 +37,10 @@ CReate token every time you register, login, update
   
   
   
-REGISTER 
+REGISTER     
+
+1. save on Mongo
+2. attack token on cookie 
   
   const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -68,6 +73,9 @@ REGISTER
   
 LOGIN: 
 
+1. extract User info fro Mongo
+2. compare this User.password with the entered Password
+  
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -184,14 +192,23 @@ export default attachCookie;
 
 
 MIDDLEWARE:
+  
+  // used when making HTTP reqs like
+  // app.use('/api/v1/jobs', auth, jobsRouter);
 
 const auth = async (req, res, next) => {
+  
+  // 1. pick up the token 
   const token = req.cookies.token;
   if (!token) {
     throw new UnAuthenticatedError('Authentication Invalid');
   }
   try {
+    
+    // verify it 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // kinda ignore this part 
     const testUser = payload.userId === '63628d5d178e918562ef9ce8';
     req.user = { userId: payload.userId, testUser };
     next();

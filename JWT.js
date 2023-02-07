@@ -23,7 +23,8 @@ const token = authHeader.split(' ')[1]
 try{ 
   const payload = jwt.verify(token, process.env.JWT_SECRET) 
   console.log(payload) // ==> {userId: 'frgerf342r2f', iat:31434, exp:42123523} 
-    
+  
+  req.user = payload //  ===> {userId: 'frgerf342r2f'} 
   
 } 
 
@@ -32,7 +33,11 @@ try{
 POSTMAN - 
   
 const jsonData = pm.response.json() 
+  pm.global.set({varKey},{varValue}) 
+
 pm.global.set("token",jsonData.token) 
+  
+  {{token}} variable will be created globally 
 
 
 

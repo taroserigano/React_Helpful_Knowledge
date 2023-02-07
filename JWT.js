@@ -127,11 +127,6 @@ remove cookie
 };
   
 
-  
-  
-  
-  
-
 
 POSTMAN SETTING - 
   
@@ -146,3 +141,68 @@ pm.global.set("token",jsonData.token)
 
 
 
+
+  
+  
+  
+  
+UserSchema.pre('save', async function () {
+  // console.log(this.modifiedPaths())
+  if (!this.isModified('password')) return
+  const salt = await bcrypt.genSalt(10)
+  this.password = await bcrypt.hash(this.password, salt)
+})
+
+UserSchema.methods.createJWT = function () {
+  return jwt.sign({ userId: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_LIFETIME,
+  })
+}
+
+UserSchema.methods.comparePassword = async function (candidatePassword) {
+  const isMatch = await bcrypt.compare(candidatePassword, this.password)
+  return isMatch
+
+
+
+
+
+
+const attachCookie = ({ res, token }) => {
+  const oneDay = 1000 * 60 * 60 * 24;
+
+  res.cookie('token', token (this can be any name) , {
+    httpOnly: true,
+    expires: new Date(Date.now() + oneDay),
+    secure: process.env.NODE_ENV === 'production',
+  });
+};
+
+export default attachCookie;
+
+
+
+
+MIDDLEWARE:
+
+const auth = async (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    throw new UnAuthenticatedError('Authentication Invalid');
+  }
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const testUser = payload.userId === '63628d5d178e918562ef9ce8';
+    req.user = { userId: payload.userId, testUser };
+    next();
+  } catch (error) {
+    throw new UnAuthenticatedError('Authentication Invalid');
+  }
+};
+
+export default auth;
+
+
+
+
+  
